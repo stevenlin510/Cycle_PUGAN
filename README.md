@@ -1,10 +1,5 @@
 # PUGAN-pytorch
-Pytorch unofficial implementation of PUGAN (a Point Cloud Upsampling Adversarial Network, ICCV, 2019)
-
-#### Install some packages
-simply by 
-```
-pip install -r requirement.txt
+Pytorch implementation of Cycle_PUGAN
 ```
 #### Install Pointnet2 module
 ```
