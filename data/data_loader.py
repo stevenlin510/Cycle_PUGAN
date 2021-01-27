@@ -107,8 +107,8 @@ class PUNET_Dataset(data.Dataset):
 
 if __name__=="__main__":
     dataset=PUNET_Dataset()
-    #(input_data,gt_data,radius_data)=dataset.__getitem__(0)
-    #print(input_data.shape,gt_data.shape,radius_data.shape)
-    #dataset=PUNET_Dataset_Whole(data_dir="../MC_5k",n_input=1024)
-    #points=dataset.__getitem__(0)
-    #print(points.shape)
+    # (input_data,gt_data,radius_data)=dataset.__getitem__(0)
+    # print(input_data.shape,gt_data.shape,radius_data.shape)
+    # #dataset=PUNET_Dataset_Whole(data_dir="../MC_5k",n_input=1024)
+    # points=dataset.__getitem__(0)
+    # print(points.shape)

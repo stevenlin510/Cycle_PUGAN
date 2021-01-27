@@ -117,7 +117,7 @@ class feature_extraction(nn.Module):
 
         l4_features=self.conv4(l3_features)#b,48,n
         l4_features,l4_index=self.denseconv4(l4_features)
-        l4_features=torch.cat([l4_features,l3_features],dim=1)#b,168+480=648,n
+        l4_features=torch.cat([l4_features,l3_features],dim=1)#b,168+480=b,648,n
 
         return l4_features
 
@@ -147,31 +147,64 @@ class Generator(nn.Module):
         coord=self.conv2(coord)
         return coord
 
-class Generator_recon(nn.Module):
-    def __init__(self,params):
-        super(Generator_recon,self).__init__()
+class Downsampler(nn.Module):
+    def __init__(self,params=None):
+        super(Downsampler,self).__init__()
         self.feature_extractor=feature_extraction()
-        self.up_ratio=params['up_ratio']
-        self.num_points=params['patch_num_point']
-
-        self.conv0=nn.Sequential(
-            nn.Conv1d(in_channels=648,out_channels=128,kernel_size=1),
-            nn.ReLU()
-        )
-
+        #self.up_ratio=params['up_ratio']
+        #self.num_points=params['patch_num_point']
+        #self.out_num_point=int(self.num_points*self.up_ratio)
+        self.down_block=down_block()#n,128,4n -> n,128,n
+        self.attention_unit_down = attention_unit_down()
         self.conv1=nn.Sequential(
-            nn.Conv1d(in_channels=128,out_channels=64,kernel_size=1),
+            Conv1d(in_channels=648,out_channels=128,kernel_size=1),
             nn.ReLU()
         )
         self.conv2=nn.Sequential(
-            nn.Conv1d(in_channels=64,out_channels=3,kernel_size=1)
+            nn.Conv1d(in_channels=128,out_channels=64,kernel_size=1)
         )
+        self.conv3=nn.Sequential(
+            nn.Conv1d(in_channels=64,out_channels=3,kernel_size=1)
+        )       
     def forward(self,input):
         features=self.feature_extractor(input) #b,648,n
-        coord=self.conv0(features)
-        coord=self.conv1(coord)
-        coord=self.conv2(coord)
+
+        features = attention_unit_down(features) #b,648,n
+        H=self.conv1(features) #b,128,4*n
+        F=self.down_block(H)#b,128,n
+        G = self.conv2(F)
+        coord=self.conv3(G)
         return coord
+
+
+class attention_unit_down(nn.Module):
+    def __init__(self,in_channels=648):
+        super(attention_unit_down,self).__init__()
+        self.convF=nn.Sequential(
+            Conv1d(in_channels=in_channels,out_channels=in_channels //4,kernel_size=1),
+            nn.ReLU()
+        )
+        self.convG = nn.Sequential(
+            Conv1d(in_channels=in_channels, out_channels=in_channels // 4, kernel_size=1),
+            nn.ReLU()
+        )
+        self.convH = nn.Sequential(
+            Conv1d(in_channels=in_channels, out_channels=in_channels, kernel_size=1),
+            nn.ReLU()
+        )
+        self.gamma=nn.Parameter(torch.zeros([1]).clone().detach()).cuda()
+    def forward(self,inputs):
+        f=self.convF(inputs)
+        g=self.convG(inputs)#b,32,n
+        h=self.convH(inputs)
+        s=torch.matmul(g.permute(0,2,1),f)#b,n,n
+        beta=F.softmax(s,dim=2)#b,n,n
+
+        o=torch.matmul(h,beta)#b,130,n
+
+        x=self.gamma*o+inputs
+
+        return x
 
 class attention_unit(nn.Module):
     def __init__(self,in_channels=130):
@@ -274,8 +307,8 @@ class down_block(nn.Module):
         net=net.view([inputs.shape[0],inputs.shape[1],self.up_ratio,-1])#b,128,4,n
         #net=torch.cat(torch.unbind(net,dim=2),dim=2)
         net=self.conv1(net)#b,256,1,n
-        net=net.squeeze(2)
-        net=self.conv2(net)
+        net=net.squeeze(2)#b,256,n
+        net=self.conv2(net)#b,128,n
         return net
 
 

@@ -23,5 +23,4 @@ def get_train_options():
     opt['uniform_w']=10.0
     opt['gan_w']=0.5
     opt['repulsion_w']=5.0
-    opt['use_gan']=False
     return opt
