@@ -1,4 +1,4 @@
-# PUGAN-pytorch
+# Cycle_PUGAN
 Pytorch implementation of Cycle_PUGAN
 
 #### Install Pointnet2 module
