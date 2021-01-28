@@ -161,7 +161,7 @@ class Downsampler(nn.Module):
             nn.ReLU()
         )
         self.conv2=nn.Sequential(
-            nn.Conv1d(in_channels=128,out_channels=64,kernel_size=1)
+            nn.Conv1d(in_channels=128,out_channels=3,kernel_size=1)
         )
         self.conv3=nn.Sequential(
             nn.Conv1d(in_channels=64,out_channels=3,kernel_size=1)
@@ -172,8 +172,8 @@ class Downsampler(nn.Module):
         features = attention_unit_down(features) #b,648,n
         H=self.conv1(features) #b,128,4*n
         F=self.down_block(H)#b,128,n
-        G = self.conv2(F)
-        coord=self.conv3(G)
+        coord = self.conv2(F)
+        #coord=self.conv3(G)
         return coord
 
 

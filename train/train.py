@@ -93,11 +93,11 @@ def train(args):
     #Optimizers and Learning Rate scheduler#
     ########################################
 
-    optimizer_D_A=Adam(D_A.parameters(),lr=params["lr_D"],betas=(0.9,0.999))
-    optimizer_D_B=Adam(D_B.parameters(),lr=params["lr_D"],betas=(0.9,0.999))
+    optimizer_D_A=Adam(D_A.parameters(),lr=params["lr_D_A"],betas=(0.9,0.999))
+    optimizer_D_B=Adam(D_B.parameters(),lr=params["lr_D_B"],betas=(0.9,0.999))
 
-    optimizer_G_AB=Adam(G_AB.parameters(),lr=params["lr_G"],betas=(0.9,0.999))
-    optimizer_G_BA=Adam(G_BA.parameters(),lr=params["lr_G"],betas=(0.9,0.999))
+    optimizer_G_AB=Adam(G_AB.parameters(),lr=params["lr_G_AB"],betas=(0.9,0.999))
+    optimizer_G_BA=Adam(G_BA.parameters(),lr=params["lr_G_BA"],betas=(0.9,0.999))
 
     D_A_scheduler = MultiStepLR(optimizer_D_A,[50,80],gamma=0.2)
     G_AB_scheduler = MultiStepLR(optimizer_G_AB,[50,80],gamma=0.2)
@@ -139,47 +139,91 @@ def train(args):
             emd_loss_AB = Loss_fn.get_emd_loss(output_point_cloud_high.permute(0, 2, 1), gt_data.permute(0, 2, 1))
             #emd_loss_Ba = Loss_fn.get_emd_loss(output_point_cloud_low.permute(0, 2, 1), input_data.permute(0, 2, 1))
 
-            # Identity loss
-            loss_id_A = criterion_identity(G_BA(input_data), input_data)
-            loss_id_B = criterion_identity(G_AB(gt_data), gt_data)
-            loss_identity = (loss_id_A + loss_id_B) // 2
 
-            #GAN loss
-            fake_pred_B = D_A(output_point_cloud_high.detach())
+            #Discriminator A loss
+            fake_B_ = fake_A_buffer.push_and_pop(output_point_cloud_high)
+            fake_pred_B = D_A(fake_B_.detach())
             d_A_loss_fake = Loss_fn.get_discriminator_loss_single(fake_pred_B,label=False)
             d_A_loss_fake.backward()
             optimizer_D_A.step()
 
             real_pred_B = D_A(gt_data.detach())
-            d_A_loss_real = Loss_fn.get_discriminator_loss_single(real_pred, label=True)
+            d_A_loss_real = Loss_fn.get_discriminator_loss_single(real_pred_B, label=True)
             d_A_loss_real.backward()
             optimizer_D_A.step()
 
             d_A_loss=d_A_loss_real+d_A_loss_fake
 
-            fake_pred=D_A(output_point_cloud_high)
-            g_AB_loss=Loss_fn.get_generator_loss(fake_pred)
+            #Discriminator B loss
+            fake_A_ = fake_B_buffer.push_and_pop(output_point_cloud_low)
+            fake_pred_A = D_B(fake_A_.detach())
+            d_B_loss_fake = Loss_fn.get_discriminator_loss_single(fake_pred_A,label=False)
+            d_B_loss_fake.backward()
+            optimizer_D_B.step()
+
+            real_pred_A = D_B(input_data.detach())
+            d_B_loss_real = Loss_fn.get_discriminator_loss_single(real_pred_A, label=True)
+            d_B_loss_real.backward()
+            optimizer_D_B.step()
+
+            d_B_loss=d_B_loss_real+d_B_loss_fake
+
+            #Cycle Loss
+            recov_A = G_BA(output_point_cloud_high)
+            ABA_repul_loss = Loss_fn.get_repulsion_loss(recov_A.permute(0,2,1))
+            ABA_uniform_loss = Loss_fn.get_uniform_loss(recov_A.permute(0,2,1))
+
+            recov_B = G_AB(output_point_cloud_low)
+            BAB_repul_loss = Loss_fn.get_repulsion_loss(recov_B.permute(0,2,1))
+            BAB_uniform_loss = Loss_fn.get_uniform_loss(recov_B.permute(0,2,1))
+            BAB_emd_loss = Loss_fn.get_emd_loss(recov_B.permute(0,2,1),gt_data.permute(0,2,1))
+
+
+            #G_AB loss
+            fake_pred_B=D_A(output_point_cloud_high)
+            g_AB_loss=Loss_fn.get_generator_loss(fake_pred_B)
             #print(repulsion_loss,uniform_loss,emd_loss)
-            total_G_AB_loss=params['uniform_w']*uniform_loss+params['emd_w']*emd_loss+ \
-            repulsion_loss*params['repulsion_w']+ g_AB_loss*params['gan_w']
-
-            
-
+            total_G_AB_loss=params['uniform_w_AB']*uniform_loss_AB+params['emd_w_AB']*emd_loss_AB+ \
+            repulsion_loss_AB*params['repulsion_w_AB']+ g_AB_loss*params['gan_w_AB']+ BAB_repul_loss*params['repulsion_w_AB']+ \
+            BAB_uniform_loss*params['uniform_w_AB']+ BAB_emd_loss*params['emd_w_AB']
+           
             total_G_AB_loss.backward()
             optimizer_G_AB.step()
 
+            #G_BA loss
+            fake_pred_A=D_B(output_point_cloud_low)
+            g_BA_loss=Loss_fn.get_generator_loss(fake_pred_A)
+            #print(repulsion_loss,uniform_loss,emd_loss)
+            total_G_BA_loss=params['uniform_w_BA']*uniform_loss_BA+ \
+            repulsion_loss_BA*params['repulsion_w_BA']+ g_BA_loss*params['gan_w_BA']+ ABA_repul_loss*params['repulsion_w_BA']+ \
+            ABA_uniform_loss*params['uniform_w_BA']
+           
+            total_G_BA_loss.backward()
+            optimizer_G_BA.step()
+
+            #Learning rate scheduler#
             current_lr_D_A=optimizer_D_A.state_dict()['param_groups'][0]['lr']
             current_lr_G_AB=optimizer_G_AB.state_dict()['param_groups'][0]['lr']
+            current_lr_D_B=optimizer_D_B.state_dict()['param_groups'][0]['lr']
+            current_lr_G_BA=optimizer_G_BA.state_dict()['param_groups'][0]['lr']
 
-            tb_logger.scalar_summary('repulsion_loss', repulsion_loss.item(), iter)
-            tb_logger.scalar_summary('uniform_loss', uniform_loss.item(), iter)
-            tb_logger.scalar_summary('emd_loss', emd_loss.item(), iter)
+            tb_logger.scalar_summary('repulsion_loss_AB', repulsion_loss_AB.item(), iter)
+            tb_logger.scalar_summary('uniform_loss_AB', uniform_loss_AB.item(), iter)
+            tb_logger.scalar_summary('repulsion_loss_BA', repulsion_loss_BA.item(), iter)
+            tb_logger.scalar_summary('uniform_loss_BA', uniform_loss_BA.item(), iter)
+            tb_logger.scalar_summary('emd_loss_AB', emd_loss_AB.item(), iter)
             
             tb_logger.scalar_summary('d_A_loss', d_A_loss.item(), iter)
             tb_logger.scalar_summary('g_AB_loss', g_AB_loss.item(), iter)
             tb_logger.scalar_summary('Total_G_AB_loss', total_G_AB_loss.item(), iter)
-            tb_logger.scalar_summary('lr_D', current_lr_D_A, iter)
-            tb_logger.scalar_summary('lr_G', current_lr_G_AB, iter)
+            tb_logger.scalar_summary('lr_D_A', current_lr_D_A, iter)
+            tb_logger.scalar_summary('lr_G_AB', current_lr_G_AB, iter)
+
+            tb_logger.scalar_summary('d_B_loss', d_B_loss.item(), iter)
+            tb_logger.scalar_summary('g_BA_loss', g_BA_loss.item(), iter)
+            tb_logger.scalar_summary('Total_G_BA_loss', total_G_BA_loss.item(), iter)
+            tb_logger.scalar_summary('lr_D_B', current_lr_D_B, iter)
+            tb_logger.scalar_summary('lr_G_BA', current_lr_G_BA, iter)
 
             msg="{:0>8},{}:{}, [{}/{}], {}: {},{}:{}".format(
                 str(datetime.timedelta(seconds=round(time.time() - start_t))),
@@ -187,8 +231,10 @@ def train(args):
                 e,
                 batch_id + 1,
                 len(train_data_loader),
-                "total_G_loss",
+                "total_G_AB_loss",
                 total_G_AB_loss.item(),
+                "total_G_BA_loss",
+                total_G_BA_loss.item(),
                 "iter time",
                 (time.time() - start_t_batch)
             )
@@ -198,6 +244,8 @@ def train(args):
 
         D_A_scheduler.step()
         G_AB_scheduler.step()
+        D_B_scheduler.step()
+        G_BA_scheduler.step()
         
         if (e+1) % params['model_save_interval'] == 0 and e > 0:
             model_save_dir = os.path.join(params['model_save_dir'], params['exp_name'])
@@ -209,15 +257,14 @@ def train(args):
             G_AB_model_save_path = os.path.join(model_save_dir, G_AB_ckpt_model_filename)
             torch.save(D_A_model.module.state_dict(), D_A_model_save_path)
             torch.save(G_AB_model.module.state_dict(), G_AB_model_save_path)
-
-
-
-
-
-            
-
+            D_B_ckpt_model_filename = "D_B_iter_%d.pth" % (e)
+            G_BA_ckpt_model_filename = "G_BA_iter_%d.pth" % (e)
+            D_B_model_save_path = os.path.join(model_save_dir, D_B_ckpt_model_filename)
+            G_BA_model_save_path = os.path.join(model_save_dir, G_BA_ckpt_model_filename)
+            torch.save(D_B_model.module.state_dict(), D_B_model_save_path)
+            torch.save(G_BA_model.module.state_dict(), G_BA_model_save_path)
 
 
 if __name__=="__main__":
-    import colored_traceback
+    #
     train(args)
