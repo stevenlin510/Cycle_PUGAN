@@ -5,7 +5,7 @@ sys.path.append("../")
 parser = argparse.ArgumentParser(description="Arg parser")
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use')
 parser.add_argument('--resume', type=str, required=True)
-parser.add_argument('--exp_name',type=str,required=True)
+parser.add_argument('--exp_name','-e',type=str,required=True)
 
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     model.load_state_dict(checkpoint)
     model.eval().cuda()
 
-    eval_dst = PUNET_Dataset_Whole(data_dir='../MC_5k')
+    eval_dst = PUNET_Dataset_Whole(data_dir='../../MC_5k')
     eval_loader = DataLoader(eval_dst, batch_size=1,
                              shuffle=False, pin_memory=True, num_workers=0)
 

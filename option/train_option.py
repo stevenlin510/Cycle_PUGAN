@@ -12,8 +12,8 @@ def get_train_options():
     opt['train_split']=os.path.join(opt['project_dir'],'data','train_list.txt')
     opt['isTrain']=True
     opt['batch_size'] = 1
-    opt['nepoch'] = 100
-    opt['model_save_interval'] = 10
+    opt['nepoch'] = 20
+    opt['model_save_interval'] = 5
     opt['model_vis_interval']=200
     opt["up_ratio"]=4
     opt["patch_num_point"]=1024
