@@ -24,7 +24,7 @@ import numpy as np
 from data.data_loader import PUNET_Dataset
 from chamfer_distance import chamfer_distance
 from auction_match import auction_match
-import pointnet2.utils.pointnet2_utils as pn2_utils
+import pointnet2.pointnet2_utils as pn2_utils
 import importlib
 from network.networks import Generator
 from option.train_option import get_train_options
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     model.load_state_dict(checkpoint)
     model.eval().cuda()
 
-    eval_dst = PUNET_Dataset(h5_file_path='../Patches_noHole_and_collected.h5', split_dir=param['test_split'], isTrain=False)
+    eval_dst = PUNET_Dataset(h5_file_path='../../Patches_noHole_and_collected.h5', split_dir=param['test_split'], isTrain=False)
     eval_loader = DataLoader(eval_dst, batch_size=args.batch_size,
                              shuffle=False, pin_memory=True, num_workers=args.workers)
 

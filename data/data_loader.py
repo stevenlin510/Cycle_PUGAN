@@ -34,7 +34,7 @@ class PUNET_Dataset_Whole(data.Dataset):
         return points#normalized_points,furthest_dist,centroid
 
 class PUNET_Dataset(data.Dataset):
-    def __init__(self, h5_file_path='../Patches_noHole_and_collected.h5',split_dir='./train_list.txt',
+    def __init__(self, h5_file_path='../../Patches_noHole_and_collected.h5',split_dir='./train_list.txt',
                  skip_rate=1, npoint=1024, use_random=True, use_norm=True,isTrain=True):
         super().__init__()
 
