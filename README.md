@@ -22,11 +22,9 @@ This repository is for my undergraduate final project. The code is modified from
     python train.py --exp_name=the_project_name --gpu=gpu_number --batch_size=batch_size
     ```
 #### Dataset
-I use the PU-Net dataset for training, you can refer to https://github.com/yulequan/PU-Net to download the .h5 dataset file, which can be directly used in this project.
+I use the PU-GAN dataset for training, you can refer to https://github.com/liruihui/PU-GAN to download the .h5 dataset file, which can be directly used in this project.
 #### Note
 Change opt['project_dir'] to where this project is located, and change opt['dataset_dir'] to where you store the dataset.
-<br/>
-Also change params['train_split'] and params['test_split'] to where you save the train/test split txt files.
 
 
 

@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/steven/cycle_pugan/evaluation_code/evaluation.cpp" "/home/steven/cycle_pugan/evaluation_code/CMakeFiles/evaluation.dir/evaluation.cpp.o"
+  "/home/steven/Cycle_PUGAN/evaluation_code/evaluation.cpp" "/home/steven/Cycle_PUGAN/evaluation_code/CMakeFiles/evaluation.dir/evaluation.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
@@ -18,7 +18,6 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "../../include"
-  "/usr/include/x86_64-linux-gnu"
   "."
   )
 

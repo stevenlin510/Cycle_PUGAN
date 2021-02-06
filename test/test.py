@@ -17,8 +17,9 @@ from utils.xyz_util import save_xyz_file
 
 from network.networks import Generator
 from data.data_loader import PUNET_Dataset_Whole
-torch.cuda.empty_cache()
+
 if __name__ == '__main__':
+    torch.cuda.empty_cache()
     model = Generator()
 
     checkpoint = torch.load(args.resume)
@@ -34,9 +35,10 @@ if __name__ == '__main__':
     save_dir=os.path.join('../outputs',exp_name)
     if os.path.exists(save_dir)==False:
         os.makedirs(save_dir)
+    
     for itr, batch in enumerate(eval_loader):
         name = names[itr]
-        points = batch[:,:,0:3].permute(0,2,1).float().cuda()
+        points = batch[:,:,0:3].permute(0,2,1).float().cuda()#cuda
         preds = model(points)
         #radius=radius.float().cuda()
         #centroid=centroid.float().cuda()

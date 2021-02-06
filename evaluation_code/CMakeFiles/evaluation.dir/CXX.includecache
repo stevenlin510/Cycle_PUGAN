@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/steven/cycle_pugan/evaluation_code/evaluation.cpp
+/home/steven/Cycle_PUGAN/evaluation_code/evaluation.cpp
 cstdlib
 -
 math.h
@@ -40,8 +40,6 @@ CGAL/Surface_mesh_shortest_path.h
 CGAL/Polygon_mesh_processing/compute_normal.h
 -
 CGAL/Polygon_mesh_processing/measure.h
--
-CGAL/Polygon_mesh_processing/distance.h
 -
 CGAL/Polyhedron_3.h
 -

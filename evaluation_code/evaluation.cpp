@@ -17,7 +17,6 @@
 #include <CGAL/Surface_mesh_shortest_path.h>
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
 #include <CGAL/Polygon_mesh_processing/measure.h>
-#include <CGAL/Polygon_mesh_processing/distance.h>
 
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_items_with_id_3.h>
@@ -25,6 +24,7 @@
 
 #include <CGAL/boost/graph/graph_traits_Polyhedron_3.h>
 #include <CGAL/boost/graph/iterator.h>
+
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
 #include <CGAL/AABB_traits.h>
 #include <CGAL/AABB_tree.h>
@@ -77,9 +77,6 @@ void *calculate_density(void* args){
   //[lower,upper)
   int lower = *(int*)(((void**)args)[7]);
   int upper =  *(int*)(((void**)args)[8]);
-
-  std::vector <std::vector<unsigned int> > *disk_points = (std::vector <std::vector<unsigned int> > *)(((void**)args)[9]);
-
   std::cout<< "In this function, handle "<<lower <<" to "<< upper <<std::endl;
 
   Surface_mesh_shortest_path shortest_paths(*tmesh);
@@ -99,18 +96,14 @@ void *calculate_density(void* args){
       for (unsigned int i=0;i<(*radius).size();i++){
         if (dist2 <= (*radius)[i]){
           radius_cnt[i] +=1;
-          (*disk_points)[sample_iter*(*radius).size()+i].push_back(pred_iter);
         }
       }
     }
-    //if (sample_iter%20==0){
-     //  std::cout << "ID "<<sample_iter<<" "<< radius_cnt[0]<< " "<<radius_cnt[1]<<" "<<radius_cnt[4]<<std::endl;
-    //}
+    if (sample_iter%20==0){
+       std::cout << "ID "<<sample_iter<<" "<< radius_cnt[0]<< " "<<radius_cnt[1]<<" "<<radius_cnt[4]<<std::endl;
+    }
     (*density)[sample_iter] = radius_cnt;
   }
-
-  std::cout<< "Finished: handle "<<lower <<" to "<< upper <<std::endl;
-
   return NULL;
 }
 
@@ -182,7 +175,7 @@ int main(int argc, char* argv[]){
   std::vector<float> nearest_distance(pred_cnt);
   std::vector<Vector_3> gt_normals(pred_cnt);
   
-  // find the basic file name of the point
+  // find the basic file name of the mesh 
   std::string pre = argv[2];
   std::string token1;
   if (pre.find('/')== std::string::npos){
@@ -194,10 +187,9 @@ int main(int argc, char* argv[]){
   std::string token2 = pre.substr(0,pre.rfind("."));
   const char* prefix = token2.c_str();
   char filename[2048];
-  sprintf(filename, "%s_point2mesh_distance.txt",prefix);
+  sprintf(filename, "%s_point2mesh_distance.xyz",prefix);
   std::ofstream distace_output(filename);
-  auto p2f_start = std::chrono::system_clock::now();
-
+  
   // calculate the point2surface distance for each predicted point
   for (int i=0;i<pred_cnt;i++){
     // get the nearest point on the surface to the given point. Note the this point is represented as face location.
@@ -207,17 +199,13 @@ int main(int argc, char* argv[]){
     pred_map_points[i] = shortest_paths.point(location.first,location.second);
     //calculate the distance
     nearest_distance[i] = CGAL::sqrt(CGAL::squared_distance(pred_points[i],pred_map_points[i]));
-    distace_output << pred_points[i][0]<<" "<<pred_points[i][1]<< " "<<pred_points[i][2]<< " "<<nearest_distance[i]<< " ";//<<std::endl;
-    distace_output << pred_map_points[i][0]<<" "<<pred_map_points[i][1]<< " "<<pred_map_points[i][2] <<std::endl;
+    distace_output << pred_points[i][0]<<" "<<pred_points[i][1]<< " "<<pred_points[i][2]<< " "<<nearest_distance[i]<<std::endl;
   }
   std::cout << "The point2surface distance:\n";
   calculate_mean_var(nearest_distance);
   std::cout << "================================="<<std::endl;
 
-  auto p2f_end = std::chrono::system_clock::now();
-  std::chrono::duration<double> p2f_elapsed_seconds = p2f_end-p2f_start;
-  std::cout <<  "p2f elapsed time: " << p2f_elapsed_seconds.count() << "s\n";
-  //return 0;
+
   //read the sampling position if have
   std::vector<Face_location> sample_face_locations;
   if (argc>3){ //read sampling seeds from file
@@ -232,18 +220,14 @@ int main(int argc, char* argv[]){
     CGAL::Random rand;
     sprintf(filename, "%s_sampling_seed.txt",prefix);
     std::ofstream sample_output(filename);
-
-    //CGAL::Polygon_mesh_processing::sample_triangle_mesh(tmesh)
-
-    for (int i=0;i<1000;i++){
+    for (int i=0;i<THREAD*10;i++){
       id = find_surface(face_areas,rand.get_double(0.0,1.0));
       // id = rand.get_int(0,face_num);
       x1 = rand.get_double(0.01,1);x2 = rand.get_double(0.01,1);x3 = rand.get_double(0.01,1);
-      total = x1 + x2 + x3;
+      total = x1 + x2+x3;
       x1 = x1/total;x2 = x2/total;x3 = x3/total;
       sample_face_locations.push_back(Face_location(face_vector[id],{{x1,x2,x3}}));
-      //sample_output<< id << " "<<x1<<" "<<x2<<" "<<" "<<x3<<std::endl;
-      sample_output<<x1<<"\t"<<x2<<"\t"<<x3<<std::endl;
+      sample_output<< id << " "<<x1<<" "<<x2<<" "<<" "<<x3<<std::endl;
     }
   }
   const int sample_cnt = sample_face_locations.size();
@@ -256,21 +240,14 @@ int main(int argc, char* argv[]){
   
   // calculate the uniformity of predicted points
   // we use multi-thread to accelerate it, and the thread number is defined by macro THREAD
-  std::vector<float> precentage={0.008,0.012};
-
+  std::vector<float> precentage={0.002,0.004,0.006,0.008,0.010,0.012,0.015};
   std::vector<float> radius(precentage.size());
-  sprintf(filename, "%s_radius.txt",prefix);
-  std::ofstream radius_output(filename);
-  std::cout << "The disk radius are: ";
   for (unsigned int i=0;i<radius.size();i++){
     radius[i]=CGAL::sqrt(total_area*precentage[i]/M_PI);
-     radius_output<<radius[i]<<" ";
-     std::cout<<radius[i]<<" ";
   }
-  radius_output<<std::endl;
-  std::cout<<std::endl;
-  std::vector<std::vector<float>> density(sample_cnt,std::vector<float>(radius.size()));
-  std::vector<std::vector<unsigned int>> disk_points(sample_cnt*radius.size());
+  std::cout << "The disk radius are: "<<radius[0]<<" "<<radius[1]<<" "<<radius[2]<<" "<<radius[3]<<" "
+            <<radius[4]<<" "<<radius[5]<<" "<<radius[6]<<std::endl;
+  std::vector <std::vector<float> > density(sample_cnt,std::vector<float>(radius.size()));
   auto start = std::chrono::system_clock::now();
   pthread_t tid[THREAD];
   int inds[THREAD+1];
@@ -279,7 +256,7 @@ int main(int argc, char* argv[]){
     inds[i]=std::min(i*interval,sample_cnt);
     inds[i+1]=std::min(sample_cnt,(i+1)*interval);
 
-    void** arg = new void* [10];
+    void** arg = new void* [9];
     arg[0]=&tmesh;
     arg[1]=&pred_face_locations;
     arg[2]=&sample_face_locations;
@@ -289,7 +266,6 @@ int main(int argc, char* argv[]){
     arg[6]=&radius;
     arg[7]=&inds[i];
     arg[8]=&inds[i+1];
-    arg[9]=&disk_points;
     usleep(rand()*200/RAND_MAX);
     std::cout << "Create thread "<<i<<std::endl; 
     pthread_create(&tid[i],NULL, calculate_density, arg);
@@ -298,18 +274,20 @@ int main(int argc, char* argv[]){
   for(int i = 0; i < THREAD; i++){
     pthread_join(tid[i], NULL);
   }
-
-  //write the density into file
-  sprintf(filename, "%s_disk_idx.txt",prefix);
-  std::ofstream disk_output(filename);
-  for (unsigned int i=0;i<disk_points.size();i++){
-    disk_output <<disk_points[i].size()<<":";
-    for (unsigned int j=0;j<disk_points[i].size();j++){
-      disk_output<<disk_points[i][j]<< " ";
+  //write the density into file 
+  sprintf(filename, "%s_density.xyz",prefix);
+  std::ofstream density_output(filename);
+  for (unsigned int i=0;i<density.size();i++){
+    for (unsigned int j=0;j<density[i].size();j++){
+      density[i][j]= density[i][j]*1.0/(pred_cnt*1.0*precentage[j]);
+      //density[i][j]= density[i][j]*1.0/(M_PI*radius[j]*radius[j]);
+      //density[i][j]= density[i][j]/(pred_cnt*1.0/total_area);
+      density_output<<density[i][j]<< " ";
+      // std::cout << density[i][j]<< " ";
     }
-    disk_output << std::endl;
+    density_output << std::endl;
+    // std::cout << std::endl;
   }
-
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end-start;
   std::time_t end_time = std::chrono::system_clock::to_time_t(end);
