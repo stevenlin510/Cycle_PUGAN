@@ -17,7 +17,7 @@ from utils.xyz_util import save_xyz_file
 
 from network.networks import Generator
 from data.data_loader import PUNET_Dataset_Whole
-
+torch.cuda.empty_cache()
 if __name__ == '__main__':
     model = Generator()
 

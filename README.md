@@ -1,5 +1,5 @@
 # Cycle_PUGAN
-Cycle_PUGAN(Cycle Point cloud Upsampling Generative Adversarial Network) by Wei-Cheng LIN, NTNU.
+Cycle_PUGAN(Cycle Point cloud Upsampling Generative Adversarial Network) by Wei-Cheng LIN, MMLAB.
 
 #### Introduction 
 This repository is for my undergraduate final project. The code is modified from [PUGAN-pytorch](https://github.com/UncleMEDM/PUGAN-pytorch) and [pytorch-CycleGAN-and-pix2pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix). 

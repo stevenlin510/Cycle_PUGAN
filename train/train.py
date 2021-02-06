@@ -10,7 +10,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
 sys.path.append('../')
 import torch
 from network.networks import Generator,Discriminator,Downsampler
-from data.data_loader import PUNET_Dataset
+from data.data_loader import *
 import time
 from option.train_option import get_train_options
 from utils.Logger import Logger
@@ -55,8 +55,8 @@ def train(args):
         os.makedirs(log_dir)
     tb_logger=Logger(log_dir)
 
-    trainloader=PUNET_Dataset(h5_file_path=params["dataset_dir"],split_dir=params['train_split'])
-    #print("params['dataset_dir']: ",params["dataset_dir"])
+    #trainloader=PUNET_Dataset(h5_file_path=params["dataset_dir"],split_dir=params['train_split'])
+    trainloader=PUGAN_Dataset(h5_file_path=params["dataset_dir"])
     num_workers=4
     train_data_loader=data.DataLoader(dataset=trainloader,batch_size=params["batch_size"],shuffle=True,
                                       num_workers=num_workers,pin_memory=True,drop_last=True)
@@ -159,10 +159,10 @@ def train(args):
             fake_pred_A = D_B(output_point_cloud_low.detach())
             g_BA_loss=Loss_fn.get_generator_loss(fake_pred_A)
             total_G_BA_loss=g_BA_loss*params['gan_w_BA']+ ABA_repul_loss*params['repulsion_w_BA']+ \
-            ABA_uniform_loss*params['uniform_w_BA']+ \
-            params['uniform_w_BA']*uniform_loss_BA+ \
             repulsion_loss_BA*params['repulsion_w_BA']
-           
+            # ABA_uniform_loss*params['uniform_w_BA']+ \
+            # params['uniform_w_BA']*uniform_loss_BA+ \
+     
             total_G_BA_loss.backward()
             optimizer_G_BA.step()
 
@@ -218,7 +218,7 @@ def train(args):
             msg="{:0>8},{}:{}, [{}/{}], {}: {},{}:{},{}:{},{}:{},{}:{} ".format(
                 str(datetime.timedelta(seconds=round(time.time() - start_t))),
                 "epoch",
-                e,
+                e+1,
                 batch_id + 1,
                 len(train_data_loader),
                 "total_G_AB_loss",
@@ -245,14 +245,27 @@ def train(args):
             model_save_dir = os.path.join(params['model_save_dir'], params['exp_name'])
             if os.path.exists(model_save_dir) == False:
                 os.makedirs(model_save_dir)
-            D_A_ckpt_model_filename = "D_A_iter_%d.pth" % (e)
-            G_AB_ckpt_model_filename = "G_AB_iter_%d.pth" % (e)
+            D_A_ckpt_model_filename = "D_A_iter_%d.pth" % (e+1)
+            G_AB_ckpt_model_filename = "G_AB_iter_%d.pth" % (e+1)
             D_A_model_save_path = os.path.join(model_save_dir, D_A_ckpt_model_filename)
             G_AB_model_save_path = os.path.join(model_save_dir, G_AB_ckpt_model_filename)
-            D_B_ckpt_model_filename = "D_B_iter_%d.pth" % (e)
-            G_BA_ckpt_model_filename = "G_BA_iter_%d.pth" % (e)
+            D_B_ckpt_model_filename = "D_B_iter_%d.pth" % (e+1)
+            G_BA_ckpt_model_filename = "G_BA_iter_%d.pth" % (e+1)
+            model_ckpt_model_filename= "Cyclegan_iter_%d.pth" %(e+1)
             D_B_model_save_path = os.path.join(model_save_dir, D_B_ckpt_model_filename)
             G_BA_model_save_path = os.path.join(model_save_dir, G_BA_ckpt_model_filename)
+            model_all_path = os.path.join(model_save_dir,model_ckpt_model_filename)
+            torch.save({
+                'G_AB_state_dict':G_AB.module.state_dict(),
+                'G_BA_state_dict':G_BA.module.state_dict(),
+                'D_A_state_dict':D_A.module.state_dict(),
+                'D_B_state_dict':D_B.module.state_dict(),
+                'optimizer_G_AB_state_dict':optimizer_G_AB.state_dict(),
+                'optimizer_G_BA_state_dict':optimizer_G_BA.state_dict(),
+                'optimizer_D_A_state_dict':optimizer_D_A.state_dict(),
+                'optimizer_D_B_state_dict':optimizer_D_B.state_dict()
+                },model_all_path
+                )
             torch.save(D_A.module.state_dict(), D_A_model_save_path)
             torch.save(G_AB.module.state_dict(), G_AB_model_save_path)
             torch.save(D_B.module.state_dict(), D_B_model_save_path)
