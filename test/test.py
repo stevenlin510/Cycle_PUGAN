@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader
 from utils.xyz_util import save_xyz_file
 
 from network.networks import Generator
-from data.data_loader import PUNET_Dataset_Whole
+from dataloader.data_loader import PUNET_Dataset_Whole
 
 if __name__ == '__main__':
     torch.cuda.empty_cache()
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     model.load_state_dict(checkpoint)
     model.eval().cuda()
 
-    eval_dst = PUNET_Dataset_Whole(data_dir='../../MC_5k')
+    eval_dst = PUNET_Dataset_Whole(data_dir='../../PU-GAN_data/test_xyz/')
     eval_loader = DataLoader(eval_dst, batch_size=1,
                              shuffle=False, pin_memory=True, num_workers=0)
 

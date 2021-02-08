@@ -21,7 +21,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import numpy as np
 
-from data.data_loader import *
+from dataloader.data_loader import *
 from chamfer_distance import chamfer_distance
 from auction_match import auction_match
 import pointnet2.pointnet2_utils as pn2_utils

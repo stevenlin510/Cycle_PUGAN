@@ -10,7 +10,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
 sys.path.append('../')
 import torch
 from network.networks import Generator,Discriminator,Downsampler
-from data.data_loader import *
+from dataloader.data_loader import *
 import time
 from option.train_option import get_train_options
 from utils.Logger import Logger
@@ -42,7 +42,7 @@ def train(args):
     start_t=time.time()
     params=get_train_options()
     params["exp_name"]=args.exp_name
-    params["patch_num_point"]=1024
+    params["patch_num_point"]=256
     params["batch_size"]=args.batch_size
 
     if args.debug:
@@ -56,7 +56,7 @@ def train(args):
     tb_logger=Logger(log_dir)
 
     #trainloader=PUNET_Dataset(h5_file_path=params["dataset_dir"],split_dir=params['train_split'])
-    trainloader=PUGAN_Dataset(h5_file_path=params["dataset_dir"])
+    trainloader=PUGAN_Dataset(h5_file_path=params["dataset_dir"],npoint=256)
     num_workers=4
     train_data_loader=data.DataLoader(dataset=trainloader,batch_size=params["batch_size"],shuffle=True,
                                       num_workers=num_workers,pin_memory=True,drop_last=True)

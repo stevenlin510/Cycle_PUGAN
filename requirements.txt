@@ -3,3 +3,4 @@ torchvision==0.4.0
 matplotlib==3.3.3
 tensorflow==1.13.1
 open3d
+opencv-python

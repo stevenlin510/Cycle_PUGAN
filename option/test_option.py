@@ -7,7 +7,6 @@ def get_train_options():
     opt['model_save_dir'] = opt['project_dir'] + '/checkpoints'
     opt["test_save_dir"]=opt['project_dir'] + '/test_results'
     opt['test_log_dir']=opt['project_dir'] + '/log_results'
-    opt['dataset_dir'] = os.path.join(opt["project_dir"],"Patches_noHole_and_collected.h5")
     opt['isTrain']=False
     opt['batch_size'] = 1
     opt["patch_num_point"]=1024

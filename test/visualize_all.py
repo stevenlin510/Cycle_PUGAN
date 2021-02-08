@@ -8,7 +8,7 @@ from utils.pc_util import draw_point_cloud
 
 parser = argparse.ArgumentParser(description="Arg parser")
 parser.add_argument('--data_dir', type=str, required=True)
-parser.add_argument('--exp_name',type=str,required=True)
+parser.add_argument('--exp_name','-e',type=str,required=True)
 
 args = parser.parse_args()
 
@@ -18,7 +18,7 @@ if __name__=="__main__":
     for file in file_dir:
         if file.split('/')[-1].find("_")<0:
             pcd_list.append(file)
-    image_save_dir=os.path.join("../vis_result",args.exp_name)
+    image_save_dir=os.path.join("../../vis_result_cyclepugan",args.exp_name)
     if os.path.exists(image_save_dir)==False:
         os.makedirs(image_save_dir)
 
