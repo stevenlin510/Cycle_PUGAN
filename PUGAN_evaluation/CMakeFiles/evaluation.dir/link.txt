@@ -1,0 +1,1 @@
+/usr/bin/c++  -fopenmp -rdynamic CMakeFiles/evaluation.dir/evaluation.cpp.o -o evaluation   -L/home/steven/Downloads/cgal-4.14/build/release/lib  -Wl,-rpath,/home/steven/Downloads/cgal-4.14/build/release/lib -lmpfr -lgmp /home/steven/Downloads/cgal-4.14/build/release/lib/libCGAL.so.13.0.3 -lmpfr -lgmp 

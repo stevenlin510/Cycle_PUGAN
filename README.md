@@ -21,6 +21,17 @@ This repository is for my undergraduate final project. The code is modified from
     cd train
     python train.py --exp_name=the_project_name --gpu=gpu_number --batch_size=batch_size
     ```
+
+#### Evaluation
+Install CGAL library first.
+```shell
+cd evaluation
+cmake .
+make
+./evaluation <input>.off <pred>.xyz
+
+```
+
 #### Dataset
 I use the PU-GAN dataset for training, you can refer to https://github.com/liruihui/PU-GAN to download the .h5 dataset file, which can be directly used in this project.
 #### Note

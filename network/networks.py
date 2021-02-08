@@ -35,10 +35,6 @@ class get_edge_feature(nn.Module):
 
         return edge_feature,idx
 
-
-
-        return dist,idx
-
 class denseconv(nn.Module):
     def __init__(self,growth_rate=64,k=16,in_channels=6,isTrain=True):
         super(denseconv,self).__init__()
