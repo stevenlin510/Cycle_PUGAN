@@ -16,9 +16,9 @@ if __name__=="__main__":
     file_dir=glob.glob(os.path.join(args.data_dir,"*.xyz"))##visualize all xyz file
     pcd_list=[]
     for file in file_dir:
-        if file.split('/')[-1].find("_")<0:
-            pcd_list.append(file)
-    image_save_dir=os.path.join("../../vis_result_cyclepugan",args.exp_name)
+        # if file.split('/')[-1].find("_")<0:
+        pcd_list.append(file)
+    image_save_dir=os.path.join("../../vis_result",args.exp_name)
     if os.path.exists(image_save_dir)==False:
         os.makedirs(image_save_dir)
 
@@ -30,3 +30,16 @@ if __name__=="__main__":
         img=(img*255).astype(np.uint8)
         image_save_path=os.path.join(image_save_dir,file_name+".png")
         cv2.imwrite(image_save_path,img)
+
+        img1 = draw_point_cloud(pcd, zrot=110 / 180.0 * np.pi, xrot=135 / 180.0 * np.pi, yrot=0 / 180.0 * np.pi,
+                            diameter=5)
+        img2 = draw_point_cloud(pcd, zrot=70 / 180.0 * np.pi, xrot=135 / 180.0 * np.pi, yrot=0 / 180.0 * np.pi,
+                            diameter=5)
+        img3 = draw_point_cloud(pcd ,zrot=180.0 / 180.0 * np.pi, xrot=90 / 180.0 * np.pi, yrot=0 / 180.0 * np.pi,
+                            diameter=5)
+        image_large = np.concatenate([img1, img2, img3], axis=0)
+        image_large=(image_large*255).astype(np.uint8)
+        image_save_path1=os.path.join(image_save_dir,file_name+"_3.png")
+        cv2.imwrite(image_save_path1,image_large)
+
+

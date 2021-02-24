@@ -148,7 +148,7 @@ class Downsampler(nn.Module):
         super(Downsampler,self).__init__()
         self.feature_extractor=feature_extraction()
         self.down_block=down_block()#n,128,4n -> n,128,n
-        self.attention_unit_down = attention_unit_down()
+        self.attention_unit_down = attention_unit_down(in_channels=648)
         self.conv1=nn.Sequential(
             Conv1d(in_channels=648,out_channels=128,kernel_size=1),
             nn.ReLU()
@@ -162,7 +162,7 @@ class Downsampler(nn.Module):
     def forward(self,input):
         features=self.feature_extractor(input) #b,648,4*n
 
-        #features = attention_unit_down(features) #b,648,4*n
+        features = self.attention_unit_down(features) #b,648,4*n
         H=self.conv1(features) #b,128,4*n
         F=self.down_block(H)#b,128,n
         G = self.conv2(F)

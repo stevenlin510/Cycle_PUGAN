@@ -138,12 +138,12 @@ def train(args):
             recov_A = G_BA(output_point_cloud_high)
             ABA_repul_loss = Loss_fn.get_repulsion_loss(recov_A.permute(0,2,1))
             ABA_uniform_loss = Loss_fn.get_uniform_loss(recov_A.permute(0,2,1))
-
+            
             recov_B = G_AB(output_point_cloud_low)
             BAB_repul_loss = Loss_fn.get_repulsion_loss(recov_B.permute(0,2,1))
             BAB_uniform_loss = Loss_fn.get_uniform_loss(recov_B.permute(0,2,1))
             BAB_emd_loss = Loss_fn.get_emd_loss(recov_B.permute(0,2,1),gt_data.permute(0,2,1))
-
+                    
             #G_AB loss
             fake_pred_B = D_A(output_point_cloud_high.detach())
             g_AB_loss=Loss_fn.get_generator_loss(fake_pred_B)
@@ -208,14 +208,13 @@ def train(args):
             tb_logger.scalar_summary('Total_G_AB_loss', total_G_AB_loss.item(), iter)
             tb_logger.scalar_summary('lr_D_A', current_lr_D_A, iter)
             tb_logger.scalar_summary('lr_G_AB', current_lr_G_AB, iter)
-
             tb_logger.scalar_summary('d_B_loss', d_B_loss.item(), iter)
             tb_logger.scalar_summary('g_BA_loss', g_BA_loss.item(), iter)
             tb_logger.scalar_summary('Total_G_BA_loss', total_G_BA_loss.item(), iter)
             tb_logger.scalar_summary('lr_D_B', current_lr_D_B, iter)
             tb_logger.scalar_summary('lr_G_BA', current_lr_G_BA, iter)
 
-            msg="{:0>8},{}:{}, [{}/{}], {}: {},{}:{},{}:{},{}:{},{}:{} ".format(
+            msg="{:0>8},{}:{}, [{}/{}], {}: {}, {}: {}, {}:{}, {}: {},{}: {}".format(
                 str(datetime.timedelta(seconds=round(time.time() - start_t))),
                 "epoch",
                 e+1,
@@ -230,7 +229,7 @@ def train(args):
                 "d_A_loss", 
                 d_A_loss.item(),
                 "d_B_loss",
-                 d_B_loss.item()
+                d_B_loss.item()
             )
             print(msg)
 

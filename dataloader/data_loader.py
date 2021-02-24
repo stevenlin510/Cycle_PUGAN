@@ -9,7 +9,7 @@ from torchvision import transforms
 class PUNET_Dataset_Whole(data.Dataset):
     def __init__(self, data_dir='../MC_5k',n_input=1024):
         super().__init__()
-        self.raw_input_points=5000
+        self.raw_input_points=8192
         self.n_input=1024
         
         file_list = os.listdir(data_dir)
@@ -53,7 +53,7 @@ class PUNET_Dataset(data.Dataset):
 
         centroid = np.mean(self.gt[..., :3], axis=1, keepdims=True)
         furthest_distance = np.amax(np.sqrt(np.sum((self.gt[..., :3] - centroid) ** 2, axis=-1)), axis=1, keepdims=True)
-        self.radius = furthest_distance[:, 0]  # not very sure?
+        self.radius = furthest_distance[:, 0]
 
         if use_norm:
             self.radius = np.ones(shape=(len(self.input)))
