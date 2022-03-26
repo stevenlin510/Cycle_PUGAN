@@ -2,7 +2,7 @@
 Cycle_PUGAN(Cycle Point cloud Upsampling Generative Adversarial Network) by Wei-Cheng LIN, MMLAB.
 
 #### Introduction 
-This repository is for my undergraduate final project. My idea is that embedding PUGAN into CycleGAN framework however the results are not promising. The code is modified from [PUGAN-pytorch](https://github.com/UncleMEDM/PUGAN-pytorch) and [pytorch-CycleGAN-and-pix2pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix). 
+This repository is for my undergraduate final project. My idea is that embed PUGAN into CycleGAN framework, however the results are not promising. The code is modified from [PUGAN-pytorch](https://github.com/UncleMEDM/PUGAN-pytorch) and [pytorch-CycleGAN-and-pix2pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix). 
 #### Usage
 1. Clone the repository:
     ```shell
